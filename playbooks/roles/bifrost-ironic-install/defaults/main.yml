@@ -141,6 +141,8 @@ sushy_git_folder: /opt/stack/sushy
 ipa_git_folder: /opt/stack/ironic-python-agent
 ipa_builder_git_folder: /opt/stack/ironic-python-agent-builder
 prometheus_exporter_git_folder: /opt/stack/ironic-prometheus-exporter
+ironic_ntp_server: "{{ net_ip('localhost') }}"
+ironic_inspector_ntp_server: "{{ net_ip('localhost') }}"
 
 enabled_hardware_types: "ipmi,redfish,manual-management,ilo"
 default_deploy_interface: "direct"
@@ -400,5 +402,34 @@ pxe_kernel_params: >-
   sshkey="{{ ssh_public_key }}"
   {% endif %}
   {{ extra_kernel_options | default('') }}
+
+extra_kernel_options: []
+inspector_extra_kernel_options: []
+
+pxe_kernel_params_defaults:
+  - "nofb"
+  - "nomodeset"
+  - "systemd.journald.forward_to_console=yes"
+  - "{% if testing | bool %}console=ttyS0{% endif %}"
+  - "ipa-insecure=1"
+  - "{% if ipa_add_ssh_key | bool and ssh_public_key is defined %}sshkey='{{ ssh_public_key }}'{% endif %}"
+  - "{% if ironic_ntp_server | length %}ipa-ntp-server={{ ironic_ntp_server }}{% endif %}"
+pxe_kernel_params_extras: "{{ extra_kernel_options }}"
+pxe_kernel_params: "{{ ( pxe_kernel_params_defaults + pxe_kernel_params_extras ) | join(' ') }}"
+
+inspector_pxe_kernel_params_defaults:
+  - "ipa-inspection-callback-url={{ api_protocol }}://{{ internal_ip }}:5050/v1/continue"
+  - "{% if fast_track | bool %}ipa-api-url={{ api_protocol }}://{{ internal_ip }}:6385{% endif %}"
+  - "systemd.journald.forward_to_console=yes"
+  - "{% raw %}BOOTIF=${mac}{% endraw %}"
+  - "nofb"
+  - "nomodeset"
+  - "console=ttyS0"
+  - "ipa-insecure=1"
+  - "initrd={{ ipa_ramdisk_url | basename }}"
+  - "{% if ironic_inspector_ntp_server | length %}ipa-ntp-server={{ ironic_inspector_ntp_server }}{% endif %}"
+inspector_pxe_kernel_params_extras: "{{ inspector_extra_kernel_options }}"
+inspector_pxe_kernel_params: "{{ ( inspector_pxe_kernel_params_defaults + inspector_pxe_kernel_params_extras ) | join(' ') }}"
+
 redfish_kernel_params: "{{ pxe_kernel_params }}"
 ilo_kernel_params: "{{ pxe_kernel_params }}"
