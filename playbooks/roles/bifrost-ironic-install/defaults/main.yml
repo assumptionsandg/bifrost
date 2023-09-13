@@ -141,8 +141,8 @@ sushy_git_folder: /opt/stack/sushy
 ipa_git_folder: /opt/stack/ironic-python-agent
 ipa_builder_git_folder: /opt/stack/ironic-python-agent-builder
 prometheus_exporter_git_folder: /opt/stack/ironic-prometheus-exporter
-ironic_ntp_server: "{{ net_ip('localhost') }}"
-ironic_inspector_ntp_server: "{{ net_ip('localhost') }}"
+ironic_ntp_server: "127.0.0.1"
+ironic_inspector_ntp_server: "127.0.0.1"
 
 enabled_hardware_types: "ipmi,redfish,manual-management,ilo"
 default_deploy_interface: "direct"
@@ -394,15 +394,6 @@ sensor_data_interval: 90
 sensor_data_undeployed_nodes: false
 
 # Internal variables
-pxe_kernel_params: >-
-  nofb nomodeset systemd.journald.forward_to_console=yes
-  {% if testing | bool %}console=ttyS0{% endif %}
-  ipa-insecure=1
-  {% if ipa_add_ssh_key | bool and ssh_public_key is defined %}
-  sshkey="{{ ssh_public_key }}"
-  {% endif %}
-  {{ extra_kernel_options | default('') }}
-
 extra_kernel_options: []
 inspector_extra_kernel_options: []
 
