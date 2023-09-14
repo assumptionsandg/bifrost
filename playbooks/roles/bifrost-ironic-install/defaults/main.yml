@@ -241,7 +241,8 @@ inspector_keep_ports: "present"
 
 # String value containing extra kernel parameters for the inspector default
 # PXE configuration.
-inspector_extra_kernel_options: "ipa-inspection-collectors=default,logs"
+inspector_extra_kernel_options: 
+ - "ipa-inspection-collectors=default,logs"
 
 # Set inspector_processing_hooks to specify a non-default comma-separated
 # list of processing hooks for inspector.
@@ -394,9 +395,6 @@ sensor_data_interval: 90
 sensor_data_undeployed_nodes: false
 
 # Internal variables
-extra_kernel_options: []
-inspector_extra_kernel_options: []
-
 pxe_kernel_params_defaults:
   - "nofb"
   - "nomodeset"
@@ -405,8 +403,8 @@ pxe_kernel_params_defaults:
   - "ipa-insecure=1"
   - "{% if ipa_add_ssh_key | bool and ssh_public_key is defined %}sshkey='{{ ssh_public_key }}'{% endif %}"
   - "{% if ironic_ntp_server | length %}ipa-ntp-server={{ ironic_ntp_server }}{% endif %}"
-pxe_kernel_params_extras: "{{ extra_kernel_options }}"
-pxe_kernel_params: "{{ ( pxe_kernel_params_defaults + pxe_kernel_params_extras ) | join(' ') }}"
+pxe_kernel_params_extras: "{{ extra_kernel_options | default('') }}"
+pxe_kernel_params: "{{ (( pxe_kernel_params_defaults | join(' ') ) + ' ' + ( pxe_kernel_params_extras if pxe_kernel_params_extras is string else pxe_kernel_params_extras | join(' ') )) }}"
 
 inspector_pxe_kernel_params_defaults:
   - "ipa-inspection-callback-url={{ api_protocol }}://{{ internal_ip }}:5050/v1/continue"
@@ -420,7 +418,7 @@ inspector_pxe_kernel_params_defaults:
   - "initrd={{ ipa_ramdisk_url | basename }}"
   - "{% if ironic_inspector_ntp_server | length %}ipa-ntp-server={{ ironic_inspector_ntp_server }}{% endif %}"
 inspector_pxe_kernel_params_extras: "{{ inspector_extra_kernel_options }}"
-inspector_pxe_kernel_params: "{{ ( inspector_pxe_kernel_params_defaults + inspector_pxe_kernel_params_extras ) | join(' ') }}"
+inspector_pxe_kernel_params: "{{ (( inspector_pxe_kernel_params_defaults | join(' ') ) + ' ' + ( inspector_pxe_kernel_params_extras if inspector_pxe_kernel_params_extras is string else inspector_pxe_kernel_params_extras | join(' ') )) }}"
 
 redfish_kernel_params: "{{ pxe_kernel_params }}"
 ilo_kernel_params: "{{ pxe_kernel_params }}"
